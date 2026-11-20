@@ -265,6 +265,38 @@ def build_request(messages, my_hero):
             break
     return request_messages
 
+def tool_roll_dice(args):
+
+    sides = args.get("sides", 20)
+
+    dice_result = Dice.roll(sides) 
+    print(f"  [系统底层] 掷出了 d{sides}，结果是 {dice_result}")
+
+    return f" [系统底层] 掷出了 d{sides}，结果是 {dice_result}"
+
+def tool_create_character(args):
+    global my_hero
+    hero = Character(
+                        name=args["name"],
+                        species=args["species"],
+                        job=args["job"],
+                        background=args["background"],
+                        base_stats=args["base_stats"]
+                    )
+
+    bonus_msg = hero.apply_background_bonus(
+                        distribution=args["bonus_distribution"],
+                        stat1=args["bonus_stat1"],
+                        stat2=args.get("bonus_stat2")
+                    )
+    hero.hp = hero.max_hp
+    my_hero=hero
+    print(f"     [系统底层] 成功创建角色：{my_hero.name} ({bonus_msg})")
+    print(my_hero.get_status_text()) 
+
+    return f"角色 {my_hero.name} 创建成功，最终属性：{my_hero.stats}。请DM开始剧情。"
+
+TOOLS={"roll_dice":tool_roll_dice,"create_character":tool_create_character}
 
 messages=[
     {
@@ -326,49 +358,18 @@ while True:
 
                 tool_name = tool_call.function.name
                 print(f"  -> 正在执行工具: {tool_name}")
-                args = json.loads(tool_call.function.arguments)
+                try:
+                    args = json.loads(tool_call.function.arguments)
 
-                if tool_name == "roll_dice":
-                    # 3. 解析 AI 传来的参数
+                    if tool_name in TOOLS: 
+                        result= TOOLS[tool_name](args)
+                    else:   
+                        result=f"调用的工具{tool_name}不存在，可用的工具有{", ".join(TOOLS.keys())}"
+                except Exception as e:
+                    print(f"工具执行出错：{type(e).__name__}: {e}")
+                    result = f"工具执行出错：{type(e).__name__}: {e}"
                     
-                    sides = args.get("sides", 20)
-                    
-                    # 4. 真正调用你的 Dice 类（调用你本地写的代码）
-                    dice_result = Dice.roll(sides) 
-                    print(f"  [系统底层] 掷出了 d{sides}，结果是 {dice_result}")
-                    
-                    # 5. 把结果塞回给 AI
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": str(dice_result)
-                    })
-
-                elif tool_name=="create_character":
-
-                    my_hero = Character(
-                        name=args["name"],
-                        species=args["species"],
-                        job=args["job"],
-                        background=args["background"],
-                        base_stats=args["base_stats"]
-                    )
-
-                    bonus_msg = my_hero.apply_background_bonus(
-                        distribution=args["bonus_distribution"],
-                        stat1=args["bonus_stat1"],
-                        stat2=args.get("bonus_stat2")
-                    )
-                    my_hero.hp = my_hero.max_hp
-
-                    print(f"     [系统底层] 成功创建角色：{my_hero.name} ({bonus_msg})")
-                    print(my_hero.get_status_text()) 
-
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": f"角色 {my_hero.name} 创建成功，最终属性：{my_hero.stats}。请DM开始剧情。"
-                    })
+                messages.append({"role":"tool","tool_call_id": tool_call.id,"content":result})
 
             request_messages = build_request(messages, my_hero)
 
