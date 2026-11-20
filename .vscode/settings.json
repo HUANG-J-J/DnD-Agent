@@ -1,0 +1,14 @@
+{
+    "python.terminal.useEnvFile": true,
+
+    // 关闭 AI 行内建议（灰字/绿色预览那种）
+    "editor.inlineSuggest.enabled": false,
+    "github.copilot.enable": { "*": false },
+    "github.copilot.nextEditSuggestions.enabled": false,
+
+    // 关闭代码补全弹窗
+    "editor.quickSuggestions": { "other": "off", "comments": "off", "strings": "off" },
+    "editor.suggestOnTriggerCharacters": false,
+    "editor.wordBasedSuggestions": "off",
+    "editor.parameterHints.enabled": false
+}
