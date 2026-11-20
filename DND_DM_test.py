@@ -84,15 +84,7 @@ class Character:
 
     # 4. 按照背景加点
     def apply_background_bonus(self, distribution: str, stat1: str, stat2: str = None):
-        # if stat1 not in self.allowed_stats:
-        #     return f"错误：{stat1} 不在你的背景可选范围内！"
-        
-        # if distribution == "A" and stat2:
-        #     if stat2 not in self.allowed_stats or stat1 == stat2:
-        #         return "错误：方案A必须选择两项不同的合法属性。"
-        #     self.stats[stat1] = min(20, self.stats[stat1] + 2)
-        #     self.stats[stat2] = min(20, self.stats[stat2] + 1)
-        #     return f"成功：{stat1} +2, {stat2} +1。"
+
         if distribution == "A":
             if stat1 not in self.allowed_stats :
                 return f"错误：{stat1} 不在你的背景可选范围内！"
