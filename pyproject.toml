@@ -1,0 +1,14 @@
+[tool.ruff]
+target-version = "py314"
+
+[tool.ruff.lint]
+# F: 真错误（未定义的名字、没用的 import）
+# E4/E7/E9: 语法和明显的写法问题（不管行长度，中文长行太多）
+# I: import 排序
+# B: 常见 bug 写法
+select = ["F", "E4", "E7", "E9", "I", "B"]
+
+[tool.pytest.ini_options]
+# 让测试能 import engine / tools / agent（相当于从项目根运行）
+pythonpath = ["."]
+testpaths = ["tests"]
