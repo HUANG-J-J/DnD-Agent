@@ -11,14 +11,6 @@ from engine.state import GameState
 
 from tools.dnd_tools import TOOL_SCHEMAS, TOOL_FUNCS
 
-client = OpenAI(
-    api_key=os.environ["LLM_API_KEY"],
-    base_url=os.environ["LLM_BASE_URL"],
-    max_retries=0, 
-    timeout=30
-)
-
-
 
 
 @retry( retry=retry_if_exception_type((
@@ -48,6 +40,14 @@ def build_request(messages, hero):
     return request_messages
 
 def main():
+
+    client = OpenAI(
+    api_key=os.environ["LLM_API_KEY"],
+    base_url=os.environ["LLM_BASE_URL"],
+    max_retries=0, 
+    timeout=30
+)
+
     messages=[
         {
             "role":"system",
@@ -144,4 +144,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-    
