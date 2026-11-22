@@ -36,6 +36,11 @@ SPELLCASTING_ABILITY = {
 
 class Character:
     def __init__(self, name: str, species: str, job: str, background: str, base_stats: dict):
+        
+        if job not in CLASS_HIT_DICE:
+            raise ValueError(f"{job}不在可选范围内，请从以下职业中选择：{list(CLASS_HIT_DICE)}") 
+        if background not in BACKGROUND_STATS:
+            raise ValueError(f"{background}不在可选范围内，请从以下背景中选择：{list(BACKGROUND_STATS)}")
         self.name = name
         self.species = species
         self.job = job
@@ -45,7 +50,7 @@ class Character:
         # 先填入基础值
         self.stats = base_stats.copy()
 
-        self.allowed_stats = BACKGROUND_STATS.get(background, ["STR", "DEX", "CON", "INT", "WIS", "CHA"])
+        self.allowed_stats = BACKGROUND_STATS[background]
           
         self.inventory = []   
         
@@ -95,7 +100,7 @@ class Character:
     @property
     def max_hp(self) -> int:
         con_mod = self.get_modifier(self.stats["CON"])
-        hit_die = CLASS_HIT_DICE.get(self.job, 8)
+        hit_die = CLASS_HIT_DICE[self.job]
         return hit_die + con_mod
 
     # 动态计算护甲等级
