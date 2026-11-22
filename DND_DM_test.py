@@ -8,7 +8,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 
 from engine.dice import Dice
 from engine.character import Character
-
+from engine.state import GameState
 
 
 client = OpenAI(
@@ -85,20 +85,20 @@ def call_llm(client, model, messages, tools):
     return client.chat.completions.create(model=model, messages=messages, tools=tools)
 
 
-def build_request(messages, my_hero):
+def build_request(messages, hero):
     request_messages = messages.copy()
-    if my_hero is None:
+    if hero is None:
         return request_messages
 
     # 从后往前找最后一条 user 消息，把状态插在它前面
     for i in reversed(range(len(request_messages))):
         if request_messages[i]["role"] == "user":
-            status_text = f"【当前真实状态】\n{my_hero.get_status_text()}"
+            status_text = f"【当前真实状态】\n{hero.get_status_text()}"
             request_messages.insert(i, {"role": "system", "content": status_text})
             break
     return request_messages
 
-def tool_roll_dice(args):
+def tool_roll_dice(args,state):
 
     sides = args.get("sides", 20)
 
@@ -107,8 +107,8 @@ def tool_roll_dice(args):
 
     return f" [系统底层] 掷出了 d{sides}，结果是 {dice_result}"
 
-def tool_create_character(args):
-    global my_hero
+def tool_create_character(args,state):
+    
     hero = Character(
                         name=args["name"],
                         species=args["species"],
@@ -123,11 +123,11 @@ def tool_create_character(args):
                         stat2=args.get("bonus_stat2")
                     )
     hero.hp = hero.max_hp
-    my_hero=hero
-    print(f"     [系统底层] 成功创建角色：{my_hero.name} ({bonus_msg})")
-    print(my_hero.get_status_text()) 
+    state.hero=hero
+    print(f"     [系统底层] 成功创建角色：{state.hero.name} ({bonus_msg})")
+    print(state.hero.get_status_text()) 
 
-    return f"角色 {my_hero.name} 创建成功，最终属性：{my_hero.stats}。请DM开始剧情。"
+    return f"角色 {state.hero.name} 创建成功，最终属性：{state.hero.stats}。请DM开始剧情。"
 
 TOOLS={"roll_dice":tool_roll_dice,"create_character":tool_create_character}
 
@@ -153,7 +153,7 @@ messages=[
     }
 ]
 
-my_hero = None
+state = GameState()
 
 while True:
     print("--------------------------------------------------------\n")
@@ -164,13 +164,13 @@ while True:
         break
 
     turn_start = len(messages)               
-    hero_before = my_hero      
+    hero_before = state.hero      
 
      # 1. 玩家的话正常存进历史
     messages.append({"role": "user", "content": user_input})
     
     # 2. 构造发请求的临时消息列表（复制一份副本）
-    request_messages = build_request(messages, my_hero)
+    request_messages = build_request(messages, state.hero)
 
     try:
         # 1. 请求模型
@@ -195,7 +195,7 @@ while True:
                     args = json.loads(tool_call.function.arguments)
 
                     if tool_name in TOOLS: 
-                        result= TOOLS[tool_name](args)
+                        result= TOOLS[tool_name](args,state)
                     else:   
                         result=f"调用的工具{tool_name}不存在，可用的工具有{", ".join(TOOLS.keys())}"
                 except Exception as e:
@@ -204,7 +204,7 @@ while True:
                     
                 messages.append({"role":"tool","tool_call_id": tool_call.id,"content":result})
 
-            request_messages = build_request(messages, my_hero)
+            request_messages = build_request(messages, state.hero)
 
             # 拿着调用工具的结果和最新状态，再次请求 AI
             resp = call_llm(client, "deepseek-flash", request_messages, tools)
@@ -221,5 +221,5 @@ while True:
     except openai.APIError as e:
         print(f"调用失败：{e}")
         del messages[turn_start:]     # 这一轮加进去的全删
-        my_hero = hero_before         # 角色也回滚
+        state.hero = hero_before         # 角色也回滚
         continue
