@@ -1,4 +1,4 @@
-from engine.character import Character
+from engine.character import BACKGROUND_STATS, CLASS_HIT_DICE, Character
 from engine.dice import Dice
 
 TOOL_SCHEMAS = [
@@ -29,8 +29,8 @@ TOOL_SCHEMAS = [
                 "properties": {
                     "name": {"type": "string", "description": "玩家的角色名"},
                     "species": {"type": "string", "description": "物种，如精灵、矮人"},
-                    "job": {"type": "string", "description": "职业，如战士、法师"},
-                    "background": {"type": "string", "description": "背景，如士兵、贤者"},
+                    "job": {"type": "string", "description": "职业，如战士、法师","enum":list(CLASS_HIT_DICE)},
+                    "background": {"type": "string", "description": "背景，如士兵、贤者","enum":list(BACKGROUND_STATS)},
                     "base_stats": {
                         "type": "object",
                         "description": "标准数组(15,14,13,12,10,8)的分配结果",
