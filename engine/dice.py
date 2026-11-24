@@ -2,9 +2,9 @@ import random
 
 
 class Dice:
-    @staticmethod
-    def roll(sides: int) -> int:
-        return random.randint(1, sides)
+    def __init__(self, seed=None): 
+        self.rng = random.Random(seed)
 
-
+    def roll(self, sides:int ) -> int:
+        return self.rng.randint(1, sides)
     

@@ -1,5 +1,6 @@
 import json
 import os
+import random
 
 import openai
 from openai import OpenAI
@@ -47,7 +48,11 @@ def main():
     base_url=os.environ["LLM_BASE_URL"],
     max_retries=0, 
     timeout=30
-)
+    )
+
+    seed = random.randrange(1_000_000)
+    print(f"本局种子：{seed}")
+    state = GameState(seed)
 
     messages=[
         {

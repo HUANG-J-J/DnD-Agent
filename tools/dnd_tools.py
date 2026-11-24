@@ -1,5 +1,4 @@
 from engine.character import BACKGROUND_STATS, CLASS_HIT_DICE, Character
-from engine.dice import Dice
 
 TOOL_SCHEMAS = [
     {   
@@ -56,7 +55,9 @@ def tool_roll_dice(args,state):
 
     sides = args.get("sides", 20)
 
-    dice_result = Dice.roll(sides) 
+
+
+    dice_result = state.dice.roll(sides) 
     print(f"  [系统底层] 掷出了 d{sides}，结果是 {dice_result}")
 
     return f" [系统底层] 掷出了 d{sides}，结果是 {dice_result}"
