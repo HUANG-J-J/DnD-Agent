@@ -13,7 +13,12 @@
   1. `apply_background_bonus` 失败时 **return 一个错误字符串**而不是抛异常，调用方也不检查返回值，所以加值失败后流程照常往下走
   2. `bonus_msg` 只 `print` 到终端，**没有拼进回传给模型的字符串**
   3. schema 里 `bonus_distribution` 是必填且只能填 A / B，没有"不加值"的选项，模型只能硬塞一个占位值
-- 状态：未修（发现 11-09）。修法方向：失败时 `raise ValueError`，交给 11-20 加的工具 `try/except` 统一回传
+- 状态：已修（发现 11-09，修复 11-24）
+  - 三处 `return "错误..."` 改为 `raise ValueError`，错误信息列出背景可选属性；非法的 distribution（如 "C"）也抛错，以前会悄悄返回 `None`
+  - `bonus_stat1` 不再必填，`stat1`/`stat2` 默认 `None`，方案 B 不用再塞占位值
+  - 工具回传给模型的字符串带上加值结果
+  - `tool_create_character` 最后才 `state.hero = hero`，加值失败时这局不会留下建了一半的角色
+- 验证：`tests/test_character.py`。原先标为 `xfail(strict=True)` 的测试在修复后变成 XPASS，CI 变红提醒删除标记；新增"加值失败后 `state.hero is None`"测试
 
 ## 2. 模型用"DM 裁定"推翻代码的状态
 

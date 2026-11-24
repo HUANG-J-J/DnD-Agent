@@ -42,10 +42,10 @@ TOOL_SCHEMAS = [
                         "required": ["STR", "DEX", "CON", "INT", "WIS", "CHA"]
                     },
                     "bonus_distribution": {"type": "string", "enum": ["A", "B"], "description": "方案A(+2/+1)或方案B(+1/+1/+1)"},
-                    "bonus_stat1": {"type": "string", "description": "方案A加值的第一个属性"},
-                    "bonus_stat2": {"type": "string", "description": "方案A加值的第二个属性"}
+                    "bonus_stat1": {"type": "string", "description": "方案A +2 的属性；方案B不填"},
+                    "bonus_stat2": {"type": "string", "description": "方案A +1 的属性；方案B不填"}
                 },
-                "required": ["name", "species", "job", "background", "base_stats", "bonus_distribution", "bonus_stat1"]
+                "required": ["name", "species", "job", "background", "base_stats", "bonus_distribution"]
             }
         }
     }
@@ -74,7 +74,7 @@ def tool_create_character(args,state):
 
     bonus_msg = hero.apply_background_bonus(
                         distribution=args["bonus_distribution"],
-                        stat1=args["bonus_stat1"],
+                        stat1=args.get("bonus_stat1"),
                         stat2=args.get("bonus_stat2")
                     )
     hero.hp = hero.max_hp
@@ -82,6 +82,6 @@ def tool_create_character(args,state):
     print(f"     [系统底层] 成功创建角色：{state.hero.name} ({bonus_msg})")
     print(state.hero.get_status_text()) 
 
-    return f"角色 {state.hero.name} 创建成功，最终属性：{state.hero.stats}。请DM开始剧情。"
+    return f"角色 {state.hero.name} 创建成功，背景加值：{bonus_msg}，最终属性：{state.hero.stats}。请DM开始剧情。"
 
 TOOL_FUNCS={"roll_dice":tool_roll_dice,"create_character":tool_create_character}

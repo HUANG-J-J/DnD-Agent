@@ -77,24 +77,24 @@ class Character:
         self.skills.append(skill_name)
 
     # 4. 按照背景加点
-    def apply_background_bonus(self, distribution: str, stat1: str, stat2: str = None):
+    def apply_background_bonus(self, distribution: str, stat1: str | None = None, stat2: str | None = None):
 
         if distribution == "A":
-            if stat1 not in self.allowed_stats :
-                return f"错误：{stat1} 不在你的背景可选范围内！"
-            elif stat2 not in self.allowed_stats:
-                return f"错误：{stat2} 不在你的背景可选范围内！"
-            elif stat1==stat2:
-                return "错误：方案A必须选择两项不同的合法属性。"
-            else:
-                self.stats[stat1] = min(20, self.stats[stat1] + 2)
-                self.stats[stat2] = min(20, self.stats[stat2] + 1)
-                return f"成功：{stat1} +2, {stat2} +1。"
-            
-        elif distribution == "B":
+            for s in (stat1, stat2):
+                if s not in self.allowed_stats:
+                    raise ValueError(f"{s} 不在背景「{self.background}」的可选属性内，可选：{self.allowed_stats}")
+            if stat1 == stat2:
+                raise ValueError("方案A必须选择两项不同的属性")
+            self.stats[stat1] = min(20, self.stats[stat1] + 2)
+            self.stats[stat2] = min(20, self.stats[stat2] + 1)
+            return f"{stat1} +2, {stat2} +1"
+
+        if distribution == "B":
             for s in self.allowed_stats:
                 self.stats[s] = min(20, self.stats[s] + 1)
-            return "成功：背景三项属性各 +1。"
+            return f"{'、'.join(self.allowed_stats)} 各 +1"
+
+        raise ValueError(f"加值方案只能是 A 或 B，收到的是 {distribution}")
 
     # 动态计算最大生命值
     @property

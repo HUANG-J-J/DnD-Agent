@@ -30,11 +30,33 @@ def test_valid_character_builds():
     assert hero.hp == hero.max_hp
 
 
-@pytest.mark.xfail(strict=True, reason="bad case 1：加值失败只 return 错误字符串，不抛异常")
 def test_illegal_background_bonus_raises():
+    # bad case 1：以前只 return 错误字符串，角色照样建出来
     # 士兵只能加 STR/DEX/CON，CHA 不合法
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="CHA"):
         make().apply_background_bonus("A", "CHA", "STR")
+
+
+def test_unknown_bonus_plan_raises():
+    # 以前传 "C" 会悄悄返回 None
+    with pytest.raises(ValueError, match="A 或 B"):
+        make().apply_background_bonus("C", "STR")
+
+
+def test_failed_bonus_leaves_no_hero():
+    # 加值失败时，这局游戏里不能留下建了一半的角色
+    from engine.state import GameState
+    from tools.dnd_tools import tool_create_character
+
+    state = GameState(42)
+    args = {
+        "name": "测试", "species": "人类", "job": "战士", "background": "士兵",
+        "base_stats": STATS, "bonus_distribution": "A",
+        "bonus_stat1": "CHA", "bonus_stat2": "STR",
+    }
+    with pytest.raises(ValueError):
+        tool_create_character(args, state)
+    assert state.hero is None
 
 
 # ---- 2. 规则计算 ----
@@ -59,6 +81,13 @@ def test_background_bonus_plan_a():
     hero.apply_background_bonus("A", "STR", "DEX")
     assert hero.stats["STR"] == 17
     assert hero.stats["DEX"] == 15
+
+
+def test_background_bonus_plan_b():
+    # 士兵三项 STR/DEX/CON 各 +1，不需要 stat1
+    hero = make()
+    hero.apply_background_bonus("B")
+    assert (hero.stats["STR"], hero.stats["DEX"], hero.stats["CON"]) == (16, 15, 14)
 
 
 # ---- 3. 走另一条代码路径的特殊情况 ----
