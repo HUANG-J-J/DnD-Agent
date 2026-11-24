@@ -77,26 +77,18 @@ class Character:
         self.skills.append(skill_name)
 
     # 4. 按照背景加点
-    def apply_background_bonus(self, distribution: str, stat1: str | None = None, stat2: str | None = None):
+    # 规则：背景的三项属性中一项 +2、另一项 +1，或三项各 +1
+    def apply_background_bonus(self, bonuses: dict) -> str:
+        for stat in bonuses:
+            if stat not in self.allowed_stats:
+                raise ValueError(f"{stat} 不在背景「{self.background}」的可选属性内，可选：{self.allowed_stats}")
 
-        if distribution == "A":
-            if stat1 is None or stat2 is None:
-                raise ValueError("方案A需要同时指定 bonus_stat1（+2）和 bonus_stat2（+1）")
-            for s in (stat1, stat2):
-                if s not in self.allowed_stats:
-                    raise ValueError(f"{s} 不在背景「{self.background}」的可选属性内，可选：{self.allowed_stats}")
-            if stat1 == stat2:
-                raise ValueError("方案A必须选择两项不同的属性")
-            self.stats[stat1] = min(20, self.stats[stat1] + 2)
-            self.stats[stat2] = min(20, self.stats[stat2] + 1)
-            return f"{stat1} +2, {stat2} +1"
+        if sorted(bonuses.values()) not in ([1, 2], [1, 1, 1]):
+            raise ValueError(f"加值组合不合法：{bonuses}。只能是一项 +2 另一项 +1，或三项各 +1")
 
-        if distribution == "B":
-            for s in self.allowed_stats:
-                self.stats[s] = min(20, self.stats[s] + 1)
-            return f"{'、'.join(self.allowed_stats)} 各 +1"
-
-        raise ValueError(f"加值方案只能是 A 或 B，收到的是 {distribution}")
+        for stat, value in bonuses.items():
+            self.stats[stat] = min(20, self.stats[stat] + value)
+        return "，".join(f"{stat} +{value}" for stat, value in bonuses.items())
 
     # 动态计算最大生命值
     @property

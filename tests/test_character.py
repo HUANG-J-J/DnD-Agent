@@ -34,19 +34,22 @@ def test_illegal_background_bonus_raises():
     # bad case 1：以前只 return 错误字符串，角色照样建出来
     # 士兵只能加 STR/DEX/CON，CHA 不合法
     with pytest.raises(ValueError, match="CHA"):
-        make().apply_background_bonus("A", "CHA", "STR")
+        make().apply_background_bonus({"CHA": 2, "STR": 1})
 
 
-def test_plan_a_missing_stat_raises():
-    # 缺参数要报"缺参数"，不能报成"None 不在可选属性内"
-    with pytest.raises(ValueError, match="bonus_stat2"):
-        make().apply_background_bonus("A", "STR")
-
-
-def test_unknown_bonus_plan_raises():
-    # 以前传 "C" 会悄悄返回 None
-    with pytest.raises(ValueError, match="A 或 B"):
-        make().apply_background_bonus("C", "STR")
+@pytest.mark.parametrize(
+    "bonuses",
+    [
+        {"STR": 2},                        # 只加了一项
+        {"STR": 2, "DEX": 2},              # +2/+2
+        {"STR": 1, "DEX": 1},              # 只有两项 +1
+        {"STR": 2, "DEX": 1, "CON": 1},    # 总和超了
+        {},                                # 没加
+    ],
+)
+def test_illegal_bonus_combination_raises(bonuses):
+    with pytest.raises(ValueError, match="组合不合法"):
+        make().apply_background_bonus(bonuses)
 
 
 def test_failed_bonus_leaves_no_hero():
@@ -57,8 +60,7 @@ def test_failed_bonus_leaves_no_hero():
     state = GameState(42)
     args = {
         "name": "测试", "species": "人类", "job": "战士", "background": "士兵",
-        "base_stats": STATS, "bonus_distribution": "A",
-        "bonus_stat1": "CHA", "bonus_stat2": "STR",
+        "base_stats": STATS, "bonuses": {"CHA": 2, "STR": 1},
     }
     with pytest.raises(ValueError):
         tool_create_character(args, state)
@@ -82,17 +84,17 @@ def test_max_hp(job, expected):
     assert make(job=job).max_hp == expected
 
 
-def test_background_bonus_plan_a():
+def test_bonus_two_one():
     hero = make()
-    hero.apply_background_bonus("A", "STR", "DEX")
+    hero.apply_background_bonus({"STR": 2, "DEX": 1})
     assert hero.stats["STR"] == 17
     assert hero.stats["DEX"] == 15
 
 
-def test_background_bonus_plan_b():
-    # 士兵三项 STR/DEX/CON 各 +1，不需要 stat1
+def test_bonus_one_one_one():
+    # 士兵三项 STR/DEX/CON 各 +1
     hero = make()
-    hero.apply_background_bonus("B")
+    hero.apply_background_bonus({"STR": 1, "DEX": 1, "CON": 1})
     assert (hero.stats["STR"], hero.stats["DEX"], hero.stats["CON"]) == (16, 15, 14)
 
 

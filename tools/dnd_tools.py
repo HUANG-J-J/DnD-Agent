@@ -41,11 +41,13 @@ TOOL_SCHEMAS = [
                         },
                         "required": ["STR", "DEX", "CON", "INT", "WIS", "CHA"]
                     },
-                    "bonus_distribution": {"type": "string", "enum": ["A", "B"], "description": "方案A(+2/+1)或方案B(+1/+1/+1)"},
-                    "bonus_stat1": {"type": "string", "description": "方案A +2 的属性；方案B不填"},
-                    "bonus_stat2": {"type": "string", "description": "方案A +1 的属性；方案B不填"}
+                    "bonuses": {
+                        "type": "object",
+                        "description": '背景属性加值，只能加在该背景的三项属性上：一项 +2 另一项 +1（如 {"STR": 2, "DEX": 1}），或三项各 +1（如 {"STR": 1, "DEX": 1, "CON": 1}）',
+                        "additionalProperties": {"type": "integer", "enum": [1, 2]}
+                    }
                 },
-                "required": ["name", "species", "job", "background", "base_stats", "bonus_distribution"]
+                "required": ["name", "species", "job", "background", "base_stats", "bonuses"]
             }
         }
     }
@@ -72,11 +74,7 @@ def tool_create_character(args,state):
                         base_stats=args["base_stats"]
                     )
 
-    bonus_msg = hero.apply_background_bonus(
-                        distribution=args["bonus_distribution"],
-                        stat1=args.get("bonus_stat1"),
-                        stat2=args.get("bonus_stat2")
-                    )
+    bonus_msg = hero.apply_background_bonus(args["bonuses"])
     hero.hp = hero.max_hp
     state.hero=hero
     print(f"     [系统底层] 成功创建角色：{state.hero.name} ({bonus_msg})")
