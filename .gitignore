@@ -4,3 +4,5 @@ __pycache__/
 学习路线_byDS.md
 DnD_Agent_实习项目计划书.md
 rag/chunks.jsonl
+rag/embeddings.npy
+.cache/
