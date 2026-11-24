@@ -37,6 +37,12 @@ def test_illegal_background_bonus_raises():
         make().apply_background_bonus("A", "CHA", "STR")
 
 
+def test_plan_a_missing_stat_raises():
+    # 缺参数要报"缺参数"，不能报成"None 不在可选属性内"
+    with pytest.raises(ValueError, match="bonus_stat2"):
+        make().apply_background_bonus("A", "STR")
+
+
 def test_unknown_bonus_plan_raises():
     # 以前传 "C" 会悄悄返回 None
     with pytest.raises(ValueError, match="A 或 B"):

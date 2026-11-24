@@ -80,6 +80,8 @@ class Character:
     def apply_background_bonus(self, distribution: str, stat1: str | None = None, stat2: str | None = None):
 
         if distribution == "A":
+            if stat1 is None or stat2 is None:
+                raise ValueError("方案A需要同时指定 bonus_stat1（+2）和 bonus_stat2（+1）")
             for s in (stat1, stat2):
                 if s not in self.allowed_stats:
                     raise ValueError(f"{s} 不在背景「{self.background}」的可选属性内，可选：{self.allowed_stats}")
