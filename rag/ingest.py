@@ -29,7 +29,8 @@ def heading_level(span):
 
 def is_page_furniture(span):
     # 页眉 "System Reference Document 5.2" 和页码都是 11 号 GillSans
-    return round(span["size"], 1) == 11.0 and span["font"].startswith("GillSans")
+    # 注意小型大写字母标题（GillSans-Bold-SC700）的首字母也是 11 号，不能误删
+    return round(span["size"], 1) == 11.0 and span["font"] in ("GillSans", "GillSans-SemiBold")
 
 
 def clean(text):
