@@ -1,6 +1,7 @@
 import json
 import os
 import random
+from pathlib import Path
 
 import openai
 from openai import OpenAI
@@ -13,6 +14,9 @@ from tenacity import (
 
 from engine.state import GameState
 from tools.dnd_tools import TOOL_FUNCS, TOOL_SCHEMAS
+
+PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
+SYSTEM_PROMPT = (PROMPT_DIR / "dm_system.md").read_text(encoding="utf-8")
 
 
 @retry( retry=retry_if_exception_type((
@@ -54,29 +58,7 @@ def main():
     print(f"本局种子：{seed}")
     state = GameState(seed)
 
-    messages=[
-        {
-            "role":"system",
-            "content":("""你是一名 DND 5e (2024版) 的 DM。
-    在游戏开始前，你要引导玩家创建角色。你需要确认他们的：
-
-    - 名字
-
-    - 物种 (Species)
-
-    - 职业 (Class)
-
-    - 背景 (Background)
-
-    将标准数组 [15, 14, 13, 12, 10, 8] 分配给六项属性。
-
-    选择背景属性加值：在背景给出的三项属性中，一项 +2 另一项 +1，或三项各 +1。
-
-    只有当玩家完全确认以上信息后，你才能调用 create_character 工具。绝对不要帮玩家做决定，要一步步询问。""")
-        }
-    ]
-
-    state = GameState()
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
     while True:
         print("--------------------------------------------------------\n")
